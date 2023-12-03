@@ -1,34 +1,49 @@
-const fs = require('fs');
-const util = require('util');
+const fs = require('fs').promises;
 
-// Promise version of fs.readFile
-const readFromFile = util.promisify(fs.readFile);
-/**
- *  Function to write data to the JSON file given a destination and some content
- *  @param {string} destination The file you want to write to.
- *  @param {object} content The content you want to write to the file.
- *  @returns {void} Nothing
- */
-const writeToFile = (destination, content) =>
-  fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
-    err ? console.error(err) : console.info(`\nData written to ${destination}`)
-  );
-/**
- *  Function to read data from a given a file and append some content
- *  @param {object} content The content you want to append to the file.
- *  @param {string} file The path to the file you want to save to.
- *  @returns {void} Nothing
- */
-const readAndAppend = (content, file) => {
-  fs.readFile(file, 'utf8', (err, data) => {
-    if (err) {
-      console.error(err);
-    } else {
-      const parsedData = JSON.parse(data);
-      parsedData.push(content);
-      writeToFile(file, parsedData);
-    }
-  });
+/
+// Function to read from a file
+const readFromFile = async (filePath) => {
+  try {
+    const data = await fs.readFile(filePath, 'utf8');
+    return data.trim() === '' ? '[]' : data;
+  } catch (error) {
+    console.error('Error reading from file:', error);
+    throw error;
+  }
 };
 
-module.exports = { readFromFile, writeToFile, readAndAppend };
+
+// Function to read from a file, append data
+const readAndAppend = async (content, file) => {
+  try {
+    // Read the file and parse its contents
+    const data = await readFromFile(file);
+    const parsedData = JSON.parse(data);
+
+    parsedData.push(content);
+
+    // Write the updated array back to the file
+    await fs.writeFile(file, JSON.stringify(parsedData, null, 2));
+
+    console.log('Content has been appended to the file');
+  } catch (error) {
+    console.error('Error appending to file:', error);
+    throw error;
+  }
+};
+
+
+// Function to delete data from a file
+const readAndDelete = async (id, filePath) => {
+  try {
+    const data = await readFromFile(filePath);
+    const parsedData = JSON.parse(data);
+    const newData = parsedData.filter((item) => item.id !== id);
+    await fs.writeFile(filePath, JSON.stringify(newData, null, 2));
+  } catch (error) {
+    console.error('Error deleting from file:', error);
+    throw error;
+  }
+};
+
+module.exports = { readFromFile, readAndAppend, readAndDelete };

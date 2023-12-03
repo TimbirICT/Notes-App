@@ -45,13 +45,16 @@ const saveNote = (note) =>
     body: JSON.stringify(note)
   });
 
-const deleteNote = (id) =>
+
+
+  const deleteNote = (id) =>
   fetch(`/api/notes/${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json'
     }
   });
+
 
 const renderActiveNote = () => {
   hide(saveNoteBtn);
@@ -77,29 +80,37 @@ const handleNoteSave = () => {
     title: noteTitle.value,
     text: noteText.value
   };
-  saveNote(newNote).then(() => {
-    getAndRenderNotes();
-    renderActiveNote();
-  });
+  saveNote(newNote)
+    .then(() => getAndRenderNotes())
+    .then(() => renderActiveNote())
+    .catch((error) => console.error('Error saving note:', error));
 };
 
-// Delete the clicked note
-const handleNoteDelete = (e) => {
-  // Prevents the click listener for the list from being called when the button inside of it is clicked
-  e.stopPropagation();
 
-  const note = e.target;
-  const noteId = JSON.parse(note.parentElement.getAttribute('data-note')).id;
+
+// Delete the clicked note
+const handleNoteDelete = (note) => {
+  
+  event.stopPropagation();
+
+  // Extract the note ID from the clicked element
+  const noteId = JSON.parse(note.dataset.note).id;
 
   if (activeNote.id === noteId) {
     activeNote = {};
   }
 
-  deleteNote(noteId).then(() => {
-    getAndRenderNotes();
-    renderActiveNote();
-  });
+  
+  deleteNote(noteId)
+    .then(() => getAndRenderNotes())
+    .then(() => renderActiveNote())
+    .catch((error) => console.error('Error deleting note:', error));
 };
+
+
+
+
+
 
 // Sets the activeNote and displays it
 const handleNoteView = (e) => {
@@ -157,8 +168,10 @@ const renderNoteList = async (notes) => {
         'text-danger',
         'delete-note'
       );
-      delBtnEl.addEventListener('click', handleNoteDelete);
+      
+      delBtnEl.addEventListener('click', (event) => handleNoteDelete(event.target.parentElement));
 
+  
       liEl.append(delBtnEl);
     }
 
@@ -182,7 +195,10 @@ const renderNoteList = async (notes) => {
 };
 
 // Gets notes from the db and renders them to the sidebar
-const getAndRenderNotes = () => getNotes().then(renderNoteList);
+const getAndRenderNotes = () =>
+  getNotes()
+    .then(renderNoteList)
+    .catch((error) => console.error('Error fetching and rendering notes:', error));
 
 if (window.location.pathname === '/notes') {
   saveNoteBtn.addEventListener('click', handleNoteSave);
