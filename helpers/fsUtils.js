@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 
-/
+
 // Function to read from a file
 const readFromFile = async (filePath) => {
   try {
